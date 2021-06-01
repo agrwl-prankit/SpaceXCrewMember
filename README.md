@@ -8,3 +8,5 @@ data (using Room Persistence Library) to display when the user is offline. <br>
 * Show Buttons Refresh and Delete entire stored data from the Room database.
 * Display following attributes - name, agency, image(display image in app),wikipedia(hyperlink), status.
 * Rest API docs - https://github.com/r-spacex/SpaceX-API/tree/master/docs/v4
+
+#### <a href="https://drive.google.com/file/d/11nk9SOFpWu7GAiTdvmIYwS6I_JnPaT8O/view?usp=sharing">Download the apk</a>
