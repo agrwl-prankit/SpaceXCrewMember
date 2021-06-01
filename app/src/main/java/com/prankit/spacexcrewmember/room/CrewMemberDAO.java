@@ -13,9 +13,9 @@ public interface CrewMemberDAO {
     @Insert
     void insertCrew(CrewMemberRoomModel crewMemberRoomModel);
 
-    @Delete
-    void deleteAllMember(CrewMemberRoomModel crewMemberRoomModel);
+    @Query("DELETE FROM CrewMember")
+    void deleteAllMember();
 
-    @Query("SELECT * FROM CrewMemberRoomModel")
+    @Query("SELECT * FROM CrewMember")
     List<CrewMemberRoomModel> getAllMember();
 }

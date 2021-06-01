@@ -1,5 +1,6 @@
 package com.prankit.spacexcrewmember;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -7,10 +8,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.prankit.spacexcrewmember.adapter.CrewMemberAdapter;
@@ -48,25 +52,24 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
 
         db = Room.databaseBuilder(getApplicationContext(), CrewMemberDb.class, "crewMemberDb").allowMainThreadQueries().build();
-
-        convertOnlineToOffline();
     }
 
     private void convertOnlineToOffline() {
         GetUsersAsyncTask usersAsyncTask = new GetUsersAsyncTask();
         List<CrewMemberRoomModel> list = usersAsyncTask.doInBackground();
-        if (list.size() == 4 && isNetworkConnected()){
+        if (list.size() == 0 && isNetworkConnected()) {
             ((Api) new Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(Api.class))
                     .crew().enqueue(new Callback<List<CrewMemberModel>>() {
                 @Override
                 public void onResponse(Call<List<CrewMemberModel>> call, Response<List<CrewMemberModel>> response) {
                     if (response.isSuccessful()) {
                         List<CrewMemberModel> list1 = response.body();
-                        for (int pos=0; pos<list1.size(); pos++){
-                            CrewMemberRoomModel member = new CrewMemberRoomModel(list1.get(pos).getName(),list1.get(pos).getAgency(),list1.get(pos).getStatus(),
-                                    list1.get(pos).getWikipedia(),list1.get(pos).getImage());
+                        for (int pos = 0; pos < list1.size(); pos++) {
+                            CrewMemberRoomModel member = new CrewMemberRoomModel(list1.get(pos).getName(), list1.get(pos).getAgency(), list1.get(pos).getStatus(),
+                                    list1.get(pos).getWikipedia(), list1.get(pos).getImage());
                             db.crewMemberDAO().insertCrew(member);
                         }
+                        getCrewMemberOnline();
                     } else {
                         Log.i("crewerror", response.errorBody().toString());
                     }
@@ -78,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+        else
+            Toast.makeText(this, "All data are already available offline", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -98,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<CrewMemberModel>> call, Response<List<CrewMemberModel>> response) {
                 if (response.isSuccessful()) {
-                    adapter = new CrewMemberAdapter(MainActivity.this, response.body(),null, 1);
+                    adapter = new CrewMemberAdapter(MainActivity.this, response.body(), null, 1);
                     recyclerView.setAdapter(adapter);
                     recyclerView.setLayoutManager(layoutManager);
                 } else {
@@ -114,8 +119,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private class GetUsersAsyncTask extends AsyncTask<Void, Void,List<CrewMemberRoomModel>>
-    {
+    private class GetUsersAsyncTask extends AsyncTask<Void, Void, List<CrewMemberRoomModel>> {
         @Override
         protected List<CrewMemberRoomModel> doInBackground(Void... voids) {
             return db.crewMemberDAO().getAllMember();
@@ -125,14 +129,42 @@ public class MainActivity extends AppCompatActivity {
     public void getCrewMemberOffline() {
         GetUsersAsyncTask usersAsyncTask = new GetUsersAsyncTask();
         List<CrewMemberRoomModel> list = usersAsyncTask.doInBackground();
-        if (list.size() == 0)
+        if (list.size() == 0) {
+            adapter = new CrewMemberAdapter(MainActivity.this, null, list, 2);
+            recyclerView.setAdapter(adapter);
+            recyclerView.setLayoutManager(layoutManager);
             Toast.makeText(this, "No offline member found", Toast.LENGTH_SHORT).show();
-        else {
+        }
+        else{
             for (int pos = 0; pos < list.size(); pos++) {
-                adapter = new CrewMemberAdapter(MainActivity.this,null, list, 2);
+                adapter = new CrewMemberAdapter(MainActivity.this, null, list, 2);
                 recyclerView.setAdapter(adapter);
                 recyclerView.setLayoutManager(layoutManager);
             }
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.delete_item) {
+            db.crewMemberDAO().deleteAllMember();
+            if (isNetworkConnected()) getCrewMemberOnline();
+            else getCrewMemberOffline();
+        }
+        if (item.getItemId() == R.id.refresh_item) {
+            if (isNetworkConnected()) convertOnlineToOffline();
+            else
+                Toast.makeText(this, "Please connect device to internet", Toast.LENGTH_SHORT).show();
+        }
+        return true;
+    }
+
 }
