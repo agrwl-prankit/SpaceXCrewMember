@@ -1,7 +1,6 @@
-package com.prankit.spacexcrewmember;
+package com.prankit.spacexcrewmember.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.prankit.spacexcrewmember.R;
 import com.prankit.spacexcrewmember.model.CrewMemberModel;
+import com.prankit.spacexcrewmember.room.CrewMemberRoomModel;
 
 import java.util.List;
 
@@ -20,10 +21,14 @@ public class CrewMemberAdapter extends RecyclerView.Adapter<CrewMemberAdapter.Vi
 
     private Context context;
     private List<CrewMemberModel> crewList;
+    private List<CrewMemberRoomModel> offCrewList;
+    private int i;
 
-    public CrewMemberAdapter(Context context, List<CrewMemberModel> crewList) {
+    public CrewMemberAdapter(Context context, List<CrewMemberModel> crewList, List<CrewMemberRoomModel> crewMemberRoomModelList, int i) {
         this.context = context;
         this.crewList = crewList;
+        this.offCrewList = crewMemberRoomModelList;
+        this.i = i;
     }
 
     @NonNull
@@ -35,16 +40,25 @@ public class CrewMemberAdapter extends RecyclerView.Adapter<CrewMemberAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.name.setText(crewList.get(position).getName());
-        holder.agency.setText(crewList.get(position).getAgency());
-        holder.status.setText(crewList.get(position).getStatus());
-        holder.wiki.setText(crewList.get(position).getWikipedia());
-        Glide.with(context).load(crewList.get(position).getImage()).placeholder(R.drawable.icon_no_profile).into(holder.image);
+        if (i == 1) {
+            holder.name.setText(crewList.get(position).getName());
+            holder.agency.setText(crewList.get(position).getAgency());
+            holder.status.setText(crewList.get(position).getStatus());
+            holder.wiki.setText(crewList.get(position).getWikipedia());
+            Glide.with(context).load(crewList.get(position).getImage()).placeholder(R.drawable.icon_no_profile).into(holder.image);
+        } else if (i == 2){
+            holder.name.setText(offCrewList.get(position).getName());
+            holder.agency.setText(offCrewList.get(position).getAgency());
+            holder.status.setText(offCrewList.get(position).getStatus());
+            holder.wiki.setText(offCrewList.get(position).getWikipedia());
+            //Glide.with(context).load(offCrewList.get(position).getImage()).placeholder(R.drawable.icon_no_profile).into(holder.image);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return crewList.size();
+        if (i==1) return crewList.size();
+        else return offCrewList.size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder{
